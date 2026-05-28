@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard docente profesional</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;
+      --blue:#2563eb;--red:#dc2626;--yellow:#ca8a04;--green:#16a34a;--purple:#7c3aed;--cyan:#0891b2;
+    }
+    *{box-sizing:border-box}html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
+    .layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+    aside.nav{position:sticky;top:0;height:100vh;background:#0f172a;color:white;padding:20px;overflow:auto}
+    aside.nav h2{font-size:18px;margin:0 0 16px}.nav a{display:block;color:#cbd5e1;text-decoration:none;padding:10px 12px;border-radius:12px;margin:4px 0;font-weight:700;font-size:14px}
+    .nav a:hover{background:#1e293b;color:white}.main{padding:24px;max-width:1500px}
+    .hero{background:linear-gradient(135deg,#0f172a,#334155);color:white;border-radius:28px;padding:28px;margin-bottom:18px;box-shadow:0 12px 28px rgba(15,23,42,.18)}
+    .hero h1{margin:0;font-size:34px}.hero p{margin:8px 0 0;color:#cbd5e1}
+    section{scroll-margin-top:18px;margin-bottom:18px}.grid{display:grid;gap:16px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.mainGrid{grid-template-columns:1.35fr .65fr}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 2px 8px rgba(15,23,42,.04)}
+    label{font-size:13px;font-weight:800;color:#334155}input,select,textarea{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:14px;padding:12px;background:white;font-size:14px}
+    button{border:0;border-radius:14px;padding:11px 14px;font-weight:900;cursor:pointer;background:var(--blue);color:white}
+    button.secondary{background:#e2e8f0;color:#0f172a}button.green{background:var(--green)}button.purple{background:var(--purple)}
+    .kpi .label{color:var(--muted);font-size:13px}.kpi .val{font-weight:900;font-size:32px;margin-top:6px}
+    .pill{display:inline-block;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900;border:1px solid transparent}.rojo{background:#fee2e2;color:#991b1b;border-color:#fecaca}.amarillo{background:#fef3c7;color:#92400e;border-color:#fde68a}.verde{background:#dcfce7;color:#166534;border-color:#bbf7d0}.gris{background:#f1f5f9;color:#475569;border-color:#cbd5e1}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{position:sticky;top:0;background:#f1f5f9;z-index:1}.tablebox{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:16px}tr:hover{background:#f8fafc;cursor:pointer}.selected{background:#eff6ff!important}
+    .bars{display:flex;flex-direction:column;gap:10px}.barrow{display:grid;grid-template-columns:165px 1fr 58px;gap:10px;align-items:center}.barbg{height:14px;background:#e2e8f0;border-radius:999px;overflow:hidden}.bar{height:100%;background:var(--blue);border-radius:999px}.redbar{background:var(--red)}.yellowbar{background:var(--yellow)}.greenbar{background:var(--green)}.purplebar{background:var(--purple)}.cyanbar{background:var(--cyan)}
+    .small{font-size:12px;color:var(--muted)}.warn{color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:14px;padding:12px;font-size:13px}.ok{color:#166534;background:#dcfce7;border:1px solid #bbf7d0;border-radius:14px;padding:12px;font-size:13px}
+    .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px}.check{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:14px;padding:10px;background:white}.check input{width:auto;margin:0}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+    .heat{overflow:auto;border:1px solid var(--line);border-radius:16px}.heat table td,.heat table th{padding:7px;text-align:center}.hcell{color:#0f172a;font-weight:800;border-radius:6px}
+    .spark{width:120px;height:32px}.note{display:flex;justify-content:space-between;border:1px solid var(--line);border-radius:14px;padding:10px;background:#fff;margin:6px 0}
+    .alertItem{padding:10px;border-radius:14px;border:1px solid var(--line);margin:8px 0;background:#fff}.alertRed{border-color:#fecaca;background:#fff1f2}.alertYellow{border-color:#fde68a;background:#fffbeb}.alertGreen{border-color:#bbf7d0;background:#f0fdf4}
+    .evalCard{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff;margin-bottom:10px}.topic{font-size:12px;color:#334155;line-height:1.35}.eventbox{border:1px solid var(--line);border-radius:14px;padding:10px;background:white;margin-bottom:10px}
+    @media(max-width:1000px){.layout{grid-template-columns:1fr}aside.nav{position:relative;height:auto}.g4,.g3,.g2,.mainGrid{grid-template-columns:1fr}.barrow{grid-template-columns:1fr}.main{padding:14px}.hero h1{font-size:26px}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="nav">
+    <h2>📊 Dashboard docente</h2>
+    <a href="#carga">1. Carga y filtros</a>
+    <a href="#evaluaciones">2. Evaluaciones</a>
+    <a href="#calendario">3. Calendario y temarios</a>
+    <a href="#panorama">4. Panorama general</a>
+    <a href="#graficos">5. Gráficos docentes</a>
+    <a href="#comparacion">6. Comparación de cursos</a>
+    <a href="#alertas">7. Alertas</a>
+    <a href="#heatmap">8. Mapa de calor</a>
+    <a href="#estudiantes">9. Estudiantes</a>
+    <a href="#informes">10. Informes</a>
+  </aside>
+
+  <main class="main">
+    <section class="hero">
+      <h1>Dashboard profesional de notas</h1>
+      <p>Sube tu Excel, selecciona evaluaciones, analiza curso/estudiantes y genera informes pedagógicos copiables.</p>
+    </section>
+
+    <section id="carga" class="grid g2">
+      <div class="card">
+        <h2>Carga de archivo</h2>
+        <label>Archivo Excel (.xlsx o .xls)</label>
+        <input id="file" type="file" accept=".xlsx,.xls"/>
+        <p class="small">No hay estudiantes precargados. Todo se genera desde el archivo seleccionado.</p>
+      </div>
+      <div class="card">
+        <h2>Filtros</h2>
+        <div class="grid g2">
+          <div><label>Curso</label><select id="curso"><option value="Todos">Todos</option></select></div>
+          <div><label>Buscar estudiante</label><input id="buscar" placeholder="Escribe un nombre..."/></div>
+        </div>
+        <div style="margin-top:12px"><label>Tipo de informe</label>
+          <select id="tipoInforme">
+            <option value="curso">Resumen de curso seleccionado</option>
+            <option value="estudiante">Resumen de estudiante seleccionado</option>
+            <option value="global">Resumen global</option>
+            <option value="evaluacion">Resumen de evaluación seleccionada</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section id="evaluaciones" class="card">
+      <h2>Evaluaciones consideradas</h2>
+      <p class="small">Al marcar o desmarcar evaluaciones, se recalculan promedios, semáforos, alertas, gráficos e informes.</p>
+      <div class="actions">
+        <button class="secondary" id="btnAll">Marcar todo</button>
+        <button class="secondary" id="btnNone">Desmarcar todo</button>
+        <button class="secondary" id="btnPruebas">Solo pruebas</button>
+        <button class="secondary" id="btnSinTds">Sin tickets de salida</button>
+      </div>
+      <div id="evalChecks" class="checks"></div>
+    </section>
+
+    <section id="calendario" class="grid g2">
+      <div class="card">
+        <h2>Calendario de evaluaciones</h2>
+        <p class="small">Lee la fecha ubicada sobre cada prueba o test y ordena las evaluaciones cronológicamente.</p>
+        <div id="timelineBox" class="bars"></div>
+      </div>
+      <div class="card">
+        <h2>Ficha de evaluación</h2>
+        <label>Selecciona evaluación</label>
+        <select id="evalSelect"><option value="">Sin evaluaciones</option></select>
+        <div id="evalFicha" style="margin-top:12px" class="small">Carga un archivo para visualizar.</div>
+      </div>
+    </section>
+
+    <section id="panorama">
+      <div class="grid g4">
+        <div class="card kpi"><div class="label">Estudiantes</div><div id="kEst" class="val">0</div></div>
+        <div class="card kpi"><div class="label">Promedio</div><div id="kProm" class="val">—</div></div>
+        <div class="card kpi"><div class="label">Desv. estándar</div><div id="kStd" class="val">—</div></div>
+        <div class="card kpi"><div class="label">Mediana</div><div id="kMed" class="val">—</div></div>
+      </div>
+      <div class="grid g4" style="margin-top:16px">
+        <div class="card kpi"><div class="label">Rojo</div><div id="kRojo" class="val" style="color:var(--red)">0</div></div>
+        <div class="card kpi"><div class="label">Amarillo</div><div id="kAmarillo" class="val" style="color:var(--yellow)">0</div></div>
+        <div class="card kpi"><div class="label">Verde</div><div id="kVerde" class="val" style="color:var(--green)">0</div></div>
+        <div class="card kpi"><div class="label">Rango</div><div id="kRango" class="val">—</div></div>
+      </div>
+    </section>
+
+    <section id="graficos" class="grid g2">
+      <div class="card"><h2>Promedio por curso</h2><div id="cursoBars" class="bars"></div></div>
+      <div class="card"><h2>Distribución semáforo</h2><div id="distBars" class="bars"></div></div>
+      <div class="card"><h2>Promedio por evaluación</h2><div id="evalBars" class="bars"></div></div>
+      <div class="card"><h2>Evolución temporal del curso</h2><div id="temporalBars" class="bars"></div></div>
+      <div class="card"><h2>Distribución por tramos</h2><div id="tramoBars" class="bars"></div></div>
+      <div class="card"><h2>Comparación por tipo de evaluación</h2><div id="tipoBars" class="bars"></div></div>
+      <div class="card"><h2>Análisis por temario/contenido</h2><div id="contenidoBars" class="bars"></div></div>
+      <div class="card"><h2>Ranking pedagógico</h2><div id="rankingBox"></div></div>
+    </section>
+
+
+
+    <section id="comparacion" class="card">
+      <h2>Comparación de cursos</h2>
+      <p class="small">Compara dos cursos de manera independiente de los filtros generales. Usa las evaluaciones marcadas en la sección 2.</p>
+      <div class="grid g3">
+        <div><label>Curso A</label><select id="compCursoA"><option value="">Carga un archivo</option></select></div>
+        <div><label>Curso B</label><select id="compCursoB"><option value="">Carga un archivo</option></select></div>
+        <div><label>Evaluación foco</label><select id="compEval"><option value="Todas">Todas las evaluaciones marcadas</option></select></div>
+      </div>
+      <div id="comparacionBox" style="margin-top:16px" class="small">Carga un archivo para comparar cursos.</div>
+    </section>
+
+    <section id="alertas" class="grid g2">
+      <div class="card"><h2>Alertas automáticas</h2><div id="alertasBox" class="small">Carga un archivo para visualizar alertas.</div></div>
+      <div class="card"><h2>Lectura docente sugerida</h2><div id="lecturaBox" class="small">Carga un archivo para generar una lectura pedagógica.</div></div>
+    </section>
+
+    <section id="heatmap" class="card">
+      <h2>Mapa de calor de evaluaciones</h2>
+      <p class="small">Permite ver rápidamente patrones por estudiante y por evaluación.</p>
+      <div id="heatBox" class="heat"></div>
+    </section>
+
+    <section id="estudiantes" class="grid mainGrid">
+      <div class="card">
+        <h2>Detalle de estudiantes</h2>
+        <div class="tablebox">
+          <table>
+            <thead><tr><th>Curso</th><th>Estudiante</th><th>Prom.</th><th>Estado</th><th>Tendencia</th><th>Componentes usados</th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <aside class="card">
+        <h2>Ficha individual</h2>
+        <div id="ficha" class="small">Selecciona un estudiante para ver su perfil.</div>
+      </aside>
+    </section>
+
+    <section id="informes" class="card">
+      <h2>Generador de informe</h2>
+      <p class="small">Genera estadísticas copiables y un prompt para redactar el informe con una IA.</p>
+      <div class="actions">
+        <button class="green" id="btnInforme">Generar informe</button>
+        <button class="secondary" id="btnCopyInforme">Copiar informe</button>
+        <button class="purple" id="btnCopyPrompt">Copiar prompt + informe</button>
+      </div>
+      <label style="display:block;margin-top:14px">Informe estadístico generado</label>
+      <textarea id="informe" rows="14" class="mono"></textarea>
+      <label style="display:block;margin-top:14px">Indicaciones para un modelo de lenguaje</label>
+      <textarea id="promptIA" rows="10" class="mono" readonly></textarea>
+    </section>
+  </main>
+</div>
+
+<script>
+let rawRecords = [];
+let selectedId = null;
+let selectedEvaluations = new Set();
+let evalMeta = {};
+let selectedEvalKey = "";
+
+const $ = id => document.getElementById(id);
+const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+const fmt = n => n===null || n===undefined || Number.isNaN(n) ? "—" : Number(n).toFixed(1).replace(".0","");
+const normalize = s => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase();
+const clean = s => normalize(s).replace(/\./g,"").replace(/\s+/g,"").replace(/[^A-Z0-9]/g,"");
+const toNumber = v => {
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "number" && !Number.isNaN(v)) return v;
+  const n = Number(String(v).replace(",",".").trim());
+  return Number.isNaN(n) ? null : n;
+};
+function excelDateToText(v){
+  if(v === null || v === undefined || v === "") return "";
+  if(v instanceof Date && !isNaN(v)) return v.toLocaleDateString("es-CL");
+  if(typeof v === "number" && v > 20000 && v < 70000){
+    const d = XLSX.SSF.parse_date_code(v);
+    if(d) return `${String(d.d).padStart(2,"0")}/${String(d.m).padStart(2,"0")}/${d.y}`;
+  }
+  return String(v).trim();
+}
+function dateScore(txt){
+  const m = String(txt).match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(!m) return 99999999;
+  const y = Number(m[3].length===2 ? "20"+m[3] : m[3]);
+  return y*10000 + Number(m[2])*100 + Number(m[1]);
+}
+const estado = p => p < 45 ? "rojo" : p <= 55 ? "amarillo" : "verde";
+const pill = s => `<span class="pill ${s || 'gris'}">${String(s||"sin").toUpperCase()}</span>`;
+const median = arr => { if(!arr.length) return null; const a=[...arr].sort((x,y)=>x-y), m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2; };
+const std = arr => { if(arr.length<2) return null; const m=avg(arr); return Math.sqrt(avg(arr.map(x=>(x-m)**2))); };
+const min = arr => arr.length ? Math.min(...arr) : null;
+const max = arr => arr.length ? Math.max(...arr) : null;
+function findHeaderRow(rows){
+  for(let i=0;i<Math.min(rows.length,18);i++){
+    const row = rows[i].map(normalize);
+    if(row.some(h => ["NOMBRE","NOMBRE ALUMNO","ESTUDIANTE","ALUMNO","ALUMNA"].includes(h) || h.includes("NOMBRE ALUMNO"))) return i;
+  }
+  return -1;
+}
+function colIndex(headers,candidates){ return headers.findIndex(h => candidates.some(c => h===c || h.includes(c))); }
+function exactCol(headers,regex){ return headers.findIndex(h => regex.test(h)); }
+function value(row,idx){ return idx>=0 ? toNumber(row[idx]) : null; }
+function addComp(obj,label,val){ if(val !== null) obj[label]=val; }
+function buildHeaders(rows,hRow){
+  return rows[hRow].map((cell,i)=>{
+    const actual = normalize(cell);
+    const superior = hRow > 0 ? normalize(rows[hRow-1]?.[i] || "") : "";
+    const supClean = clean(superior);
+    if(actual==="NOTA" && (supClean.includes("TCLASE") || supClean.includes("TRABAJO") || supClean.includes("CLASE"))) return "TCLASE";
+    if(["NOTA","PROM","PROMEDIO"].includes(actual) && superior && !["PRUEBAS","TEST MENSUALES","TICKET DE SALIDA"].includes(superior)) return superior;
+    return actual;
+  });
+}
+function findTrabajo(headers){
+  return headers.findIndex(h=>{
+    const c=clean(h);
+    return c==="TC" || c==="TCLASE" || c==="TCLASES" || c==="TRAB" || c==="TRABCLASE" || c==="TRABCLASES" || c==="TRABAJO" || c==="TRABAJOCLASE" || c==="TRABAJOCLASES" || c==="TRABAJOENCLASE" || c==="TRABAJOENCLASES" || c==="TRABAJOPRACTICO" || c.includes("TCLASE") || c.includes("TRABCLASE") || c.includes("TRABAJOCLASE") || c.includes("TRABAJOENCLASE");
+  });
+}
+function evalType(e){
+  if(/^P\d/.test(e)) return "Pruebas";
+  if(e.includes("T1-T2")||e.includes("T3-T4")) return "Test mensuales";
+  if(e.includes("TS")||e.includes("TDS")) return "Ticket de salida";
+  if(e.includes("Trabajo")) return "Trabajo en clase";
+  if(["Marzo","Abril","Mayo","Junio"].includes(e)) return "Meses TIC";
+  return "Otros";
+}
+function parseBasic(row,headers){
+  const comps={};
+  addComp(comps,"P1",value(row,exactCol(headers,/^P\s*1$/)));
+  addComp(comps,"P2",value(row,exactCol(headers,/^P\s*2$/)));
+  addComp(comps,"P3",value(row,exactCol(headers,/^P\s*3$/)));
+  const t1=value(row,exactCol(headers,/^T\s*1$/)), t2=value(row,exactCol(headers,/^T\s*2$/)), t3=value(row,exactCol(headers,/^T\s*3$/)), t4=value(row,exactCol(headers,/^T\s*4$/));
+  addComp(comps,"Prom. T1-T2",avg([t1,t2].filter(v=>v!==null)));
+  addComp(comps,"Prom. T3-T4",avg([t3,t4].filter(v=>v!==null)));
+  let trabajoIdx=findTrabajo(headers);
+  if(trabajoIdx<0 && row.length>18) trabajoIdx=18;
+  addComp(comps,"Trabajo en clase",value(row,trabajoIdx));
+  const tdsIdxs = headers.map((h,i)=>{const c=clean(h); return (/^TS\d+/.test(c)||/^TDS\d+/.test(c)||c.includes("TICKET"))?i:-1;}).filter(i=>i>=0);
+  const tdsVals=[...new Set(tdsIdxs)].map(i=>value(row,i)).filter(v=>v!==null);
+  addComp(comps,"Prom. TS/TDS",avg(tdsVals));
+  return comps;
+}
+function parseTic(row,headers){
+  const comps={};
+  ["MARZO","ABRIL","MAYO","JUNIO"].forEach(m=>addComp(comps,m[0]+m.slice(1).toLowerCase(),value(row,exactCol(headers,new RegExp("^"+m+"$")))));
+  return comps;
+}
+function evalColumnMap(headers){
+  const cols=[];
+  ["P1","P2","P3"].forEach(k=>{const col=exactCol(headers,new RegExp("^"+k.replace("P","P\\s*")+"$")); if(col>=0) cols.push({key:k,col});});
+  [["Prom. T1-T2","T1"],["Prom. T3-T4","T3"]].forEach(([key,base])=>{const col=exactCol(headers,new RegExp("^"+base+"$")); if(col>=0) cols.push({key,col});});
+  ["Marzo","Abril","Mayo","Junio"].forEach(m=>{const col=exactCol(headers,new RegExp("^"+normalize(m)+"$")); if(col>=0) cols.push({key:m,col});});
+  const trabajoCol=findTrabajo(headers); if(trabajoCol>=0) cols.push({key:"Trabajo en clase",col:trabajoCol});
+  const tdsFirst=headers.findIndex(h=>/^TS\d+/.test(clean(h))||/^TDS\d+/.test(clean(h))); if(tdsFirst>=0) cols.push({key:"Prom. TS/TDS", col:tdsFirst});
+  return cols;
+}
+function collectTopics(rows,hRow,nameIdx,evalCols){
+  const topics={}; let lastStudentRow=hRow;
+  for(let r=hRow+1;r<rows.length;r++){
+    const nombre=String(rows[r][nameIdx]??"").trim(); const nn=normalize(nombre);
+    const excluir=["PROMEDIO","TOTAL","DESVEST","DESV","CONTEO","INTERVALO","10 A 19","20 A 29","30 A 39","40 A 49","50 A 59","60 A 69","70"];
+    if(nombre && nombre.length>=3 && !excluir.some(p=>nn.includes(p))) lastStudentRow=r;
+  }
+  evalCols.forEach(({key,col})=>{
+    for(let r=lastStudentRow+1;r<Math.min(rows.length,lastStudentRow+10);r++){
+      const txt=String(rows[r]?.[col]??"").trim();
+      if(txt && toNumber(txt)===null && !["NOTA","PROM","PROMEDIO"].includes(normalize(txt))){ topics[key]=txt; break; }
+    }
+  });
+  return topics;
+}
+function parseWorkbook(workbook){
+  const parsed=[]; evalMeta={};
+  workbook.SheetNames.forEach(sheet=>{
+    const rows=XLSX.utils.sheet_to_json(workbook.Sheets[sheet],{header:1,defval:"",raw:true});
+    const hRow=findHeaderRow(rows); if(hRow<0) return;
+    const headers=buildHeaders(rows,hRow);
+    const nameIdx=colIndex(headers,["NOMBRE","NOMBRE ALUMNO","ESTUDIANTE","ALUMNO","ALUMNA"]); if(nameIdx<0) return;
+    const isTic=normalize(sheet).includes("TIC");
+    const evalCols=evalColumnMap(headers);
+    const topics=collectTopics(rows,hRow,nameIdx,evalCols);
+    evalCols.forEach(({key,col})=>{
+      const fullKey=`${sheet}||${key}`;
+      const fecha=excelDateToText(rows[0]?.[col] || rows[1]?.[col] || "");
+      evalMeta[fullKey]={curso:sheet,evaluacion:key,fecha,temario:topics[key]||"",tipo:evalType(key)};
+    });
+    rows.slice(hRow+1).forEach((row,rIndex)=>{
+      const nombre=String(row[nameIdx]??"").trim(); const nn=normalize(nombre);
+      const excluir=["PROMEDIO","TOTAL","DESVEST","DESV","CONTEO","INTERVALO","10 A 19","20 A 29","30 A 39","40 A 49","50 A 59","60 A 69","70"];
+      if(!nombre || nombre.length<3 || excluir.some(p=>nn.includes(p))) return;
+      const comps=isTic?parseTic(row,headers):parseBasic(row,headers);
+      if(Object.keys(comps).length===0) return;
+      parsed.push({id:`${sheet}-${rIndex}-${nombre}`,curso:sheet,nombre,comps,tipo:isTic?"TIC":"Básica"});
+    });
+  });
+  return parsed;
+}
+function metaFor(curso,evaluacion){ return evalMeta[`${curso}||${evaluacion}`] || {curso,evaluacion,fecha:"",temario:"",tipo:evalType(evaluacion)}; }
+function getEvalNames(){return [...new Set(rawRecords.flatMap(r=>Object.keys(r.comps)))].sort((a,b)=>a.localeCompare(b));}
+function computedRecords(){
+  return rawRecords.map(r=>{ const comps={}; Object.entries(r.comps).forEach(([k,v])=>{if(selectedEvaluations.has(k)) comps[k]=v;}); const vals=Object.values(comps), promedio=avg(vals); return {...r,compsUsados:comps,promedio,estado:promedio===null?"gris":estado(promedio), tendencia:trend(Object.entries(comps))}; }).filter(r=>r.promedio!==null);
+}
+function filteredRecords(){ const curso=$("curso").value, q=normalize($("buscar").value); return computedRecords().filter(r=>(curso==="Todos"||r.curso===curso)&&normalize(r.nombre).includes(q)); }
+function trend(entries){ const vals=entries.map(([_,v])=>v).filter(v=>v!==null); if(vals.length<2) return "Sin tendencia"; const diff=vals[vals.length-1]-vals[0]; if(diff>=5) return "Mejora"; if(diff<=-5) return "Baja"; return "Estable"; }
+function stats(data){ const vals=data.map(r=>r.promedio).filter(v=>v!==null); return {n:data.length,prom:avg(vals),med:median(vals),std:std(vals),min:min(vals),max:max(vals),rojo:data.filter(r=>r.estado==="rojo").length,amarillo:data.filter(r=>r.estado==="amarillo").length,verde:data.filter(r=>r.estado==="verde").length,bajo40:data.filter(r=>r.promedio<40).length,sobre60:data.filter(r=>r.promedio>=60).length}; }
+function barHTML(label,val,maxVal=70,cls="",sub=""){ const pct=maxVal?Math.max(0,Math.min(100,val/maxVal*100)):0; return `<div class="barrow"><b>${label}${sub?`<br><span class="small">${sub}</span>`:""}</b><div class="barbg"><div class="bar ${cls}" style="width:${pct}%"></div></div><span>${fmt(val)}</span></div>`; }
+function evalRows(data){ const map={}; data.forEach(r=>Object.entries(r.compsUsados).forEach(([e,v])=>{ const k=`${r.curso}||${e}`; if(!map[k]) map[k]={curso:r.curso,e,promVals:[],meta:metaFor(r.curso,e)}; map[k].promVals.push(v); })); return Object.values(map).map(x=>({...x,p:avg(x.promVals),n:x.promVals.length})).filter(x=>x.p!==null); }
+function renderChecks(){ const evals=getEvalNames(); $("evalChecks").innerHTML=evals.map(e=>`<label class="check"><input type="checkbox" data-eval="${e}" ${selectedEvaluations.has(e)?"checked":""}> ${e} <span class="small">(${evalType(e)})</span></label>`).join("")||`<p class="small">Carga un archivo.</p>`; document.querySelectorAll("input[data-eval]").forEach(ch=>ch.onchange=()=>{ch.checked?selectedEvaluations.add(ch.dataset.eval):selectedEvaluations.delete(ch.dataset.eval);render();}); }
+function render(){
+  const data=filteredRecords(), st=stats(data); $("kEst").textContent=st.n;$("kProm").textContent=fmt(st.prom);$("kStd").textContent=fmt(st.std);$("kMed").textContent=fmt(st.med);$("kRojo").textContent=st.rojo;$("kAmarillo").textContent=st.amarillo;$("kVerde").textContent=st.verde;$("kRango").textContent=(st.min===null?"—":`${fmt(st.min)}–${fmt(st.max)}`);
+  const byCourse={}; data.forEach(r=>{(byCourse[r.curso]??=[]).push(r.promedio)}); $("cursoBars").innerHTML=Object.entries(byCourse).map(([c,a])=>({c,p:avg(a)})).sort((a,b)=>b.p-a.p).map(r=>barHTML(r.c,r.p,70)).join("")||"<p class='small'>Carga un archivo.</p>";
+  const total=Math.max(data.length,1); $("distBars").innerHTML=[["Rojo",st.rojo,"redbar"],["Amarillo",st.amarillo,"yellowbar"],["Verde",st.verde,"greenbar"]].map(([l,v,c])=>barHTML(l,v,total,c)).join("");
+  const eRows=evalRows(data).sort((a,b)=>a.p-b.p); $("evalBars").innerHTML=eRows.map(r=>barHTML(`${r.e} (${r.curso})`,r.p,70,"purplebar",`${r.meta.fecha||"Sin fecha"} · ${r.meta.temario||"Sin temario"}`)).join("")||"<p class='small'>Sin evaluaciones.</p>";
+  $("temporalBars").innerHTML=eRows.filter(r=>r.meta.fecha).sort((a,b)=>dateScore(a.meta.fecha)-dateScore(b.meta.fecha)).map(r=>barHTML(`${r.e} (${r.curso})`,r.p,70,"orangebar",r.meta.fecha)).join("")||"<p class='small'>No hay fechas detectadas.</p>";
+  const tramos=[["<40",data.filter(r=>r.promedio<40).length],["40-44.9",data.filter(r=>r.promedio>=40&&r.promedio<45).length],["45-55",data.filter(r=>r.promedio>=45&&r.promedio<=55).length],["55.1-62",data.filter(r=>r.promedio>55&&r.promedio<=62).length],[">62",data.filter(r=>r.promedio>62).length]]; $("tramoBars").innerHTML=tramos.map(([l,v])=>barHTML(l,v,total,"cyanbar")).join("");
+  const byType={}; data.forEach(r=>Object.entries(r.compsUsados).forEach(([k,v])=>{(byType[evalType(k)]??=[]).push(v)})); $("tipoBars").innerHTML=Object.entries(byType).map(([t,a])=>({t,p:avg(a)})).sort((a,b)=>a.p-b.p).map(r=>barHTML(r.t,r.p,70,"greenbar")).join("")||"<p class='small'>Sin datos.</p>";
+  const byTopic={}; eRows.forEach(r=>{const topic=r.meta.temario||"Sin temario"; (byTopic[topic]??=[]).push(r.p);}); $("contenidoBars").innerHTML=Object.entries(byTopic).map(([t,a])=>({t,p:avg(a)})).sort((a,b)=>a.p-b.p).slice(0,12).map(r=>barHTML(r.t.length>55?r.t.slice(0,55)+"…":r.t,r.p,70,"cyanbar")).join("")||"<p class='small'>No hay temarios detectados.</p>";
+  renderRanking(data); renderComparacion(); renderAlerts(data,eRows,st); renderHeat(data); renderTable(data); renderTimeline(eRows); renderEvalSelect(eRows); renderEvalFicha();
+}
+function renderTimeline(eRows){ const rows=eRows.filter(r=>r.meta.fecha||r.meta.temario).sort((a,b)=>dateScore(a.meta.fecha)-dateScore(b.meta.fecha)); $("timelineBox").innerHTML=rows.length?rows.map(r=>`<div class="eventbox"><b>${r.e}</b> <span class="small">${r.curso}</span><br><span style="color:#2563eb;font-weight:900">${r.meta.fecha||"Sin fecha"}</span><br>Promedio: <b>${fmt(r.p)}</b><div class="topic"><b>Temario:</b> ${r.meta.temario||"Sin temario registrado"}</div></div>`).join(""):"<p class='small'>No se detectaron fechas ni temarios.</p>"; }
+function renderEvalSelect(eRows){ const current=$("evalSelect")?.value || selectedEvalKey; const options=eRows.map(r=>`<option value="${r.curso}||${r.e}">${r.curso} · ${r.e}</option>`).join(""); $("evalSelect").innerHTML=options||`<option value="">Sin evaluaciones</option>`; if(current && [...$("evalSelect").options].some(o=>o.value===current)) $("evalSelect").value=current; selectedEvalKey=$("evalSelect").value; }
+function renderEvalFicha(){ const key=$("evalSelect").value || selectedEvalKey; selectedEvalKey=key; if(!key){$("evalFicha").innerHTML="Carga un archivo para visualizar.";return;} const [curso,e]=key.split("||"); const data=computedRecords().filter(r=>r.curso===curso && r.compsUsados[e]!==undefined); const vals=data.map(r=>r.compsUsados[e]); const meta=metaFor(curso,e); const rojo=vals.filter(v=>v<45).length, amarillo=vals.filter(v=>v>=45&&v<=55).length, verde=vals.filter(v=>v>55).length; $("evalFicha").innerHTML=`<div class="evalCard"><h3>${e}</h3><p class="small">${curso} · ${meta.tipo}</p><div class="note"><span>Fecha</span><b>${meta.fecha||"Sin fecha"}</b></div><div class="note"><span>Promedio</span><b>${fmt(avg(vals))}</b></div><div class="note"><span>Mediana</span><b>${fmt(median(vals))}</b></div><div class="note"><span>Desv. estándar</span><b>${fmt(std(vals))}</b></div><div class="note"><span>Semáforo</span><b>🔴 ${rojo} · 🟡 ${amarillo} · 🟢 ${verde}</b></div><div class="warn"><b>Temario:</b><br>${meta.temario||"No se detectó temario asociado."}</div></div>`; }
+
+function updateCompareSelectors(){
+  const cursos=[...new Set(rawRecords.map(r=>r.curso))];
+  const evals=getEvalNames();
+  const a=$("compCursoA"), b=$("compCursoB"), e=$("compEval");
+  if(!a||!b||!e) return;
+  const oldA=a.value, oldB=b.value, oldE=e.value;
+  a.innerHTML=cursos.map(c=>`<option value="${c}">${c}</option>`).join("") || `<option value="">Carga un archivo</option>`;
+  b.innerHTML=cursos.map(c=>`<option value="${c}">${c}</option>`).join("") || `<option value="">Carga un archivo</option>`;
+  e.innerHTML=`<option value="Todas">Todas las evaluaciones marcadas</option>` + evals.map(x=>`<option value="${x}">${x}</option>`).join("");
+  if(cursos.includes(oldA)) a.value=oldA; else if(cursos[0]) a.value=cursos[0];
+  if(cursos.includes(oldB)) b.value=oldB; else if(cursos[1]) b.value=cursos[1]; else if(cursos[0]) b.value=cursos[0];
+  if(oldE && (oldE==="Todas" || evals.includes(oldE))) e.value=oldE;
+}
+function statsForCurso(curso, evalFoco){
+  const base=rawRecords.filter(r=>r.curso===curso).map(r=>{
+    const comps={};
+    Object.entries(r.comps).forEach(([k,v])=>{
+      const usarEval = evalFoco==="Todas" ? selectedEvaluations.has(k) : k===evalFoco && selectedEvaluations.has(k);
+      if(usarEval) comps[k]=v;
+    });
+    const promedio=avg(Object.values(comps));
+    return {...r, compsUsados:comps, promedio, estado:promedio===null?"gris":estado(promedio), tendencia:trend(Object.entries(comps))};
+  }).filter(r=>r.promedio!==null);
+  return {data:base, st:stats(base)};
+}
+function renderComparacion(){
+  const box=$("comparacionBox"); if(!box) return;
+  const cursoA=$("compCursoA").value, cursoB=$("compCursoB").value, evalFoco=$("compEval").value || "Todas";
+  if(!cursoA || !cursoB || rawRecords.length===0){box.innerHTML="Carga un archivo para comparar cursos.";return;}
+  const A=statsForCurso(cursoA, evalFoco), B=statsForCurso(cursoB, evalFoco);
+  const dif=(x,y)=> (x===null||y===null||x===undefined||y===undefined) ? "—" : fmt(x-y);
+  const ganador=(a,b)=> (a===null||b===null) ? "—" : a>b?cursoA:a<b?cursoB:"Empate";
+  const evals = evalFoco==="Todas" ? getEvalNames().filter(e=>selectedEvaluations.has(e)) : [evalFoco].filter(e=>selectedEvaluations.has(e));
+  const evalTable=evals.map(e=>{
+    const valsA=A.data.map(r=>r.compsUsados[e]).filter(v=>v!==undefined);
+    const valsB=B.data.map(r=>r.compsUsados[e]).filter(v=>v!==undefined);
+    const pa=avg(valsA), pb=avg(valsB);
+    return `<tr><td><b>${e}</b></td><td>${fmt(pa)}</td><td>${fmt(pb)}</td><td>${dif(pa,pb)}</td><td>${ganador(pa,pb)}</td></tr>`;
+  }).join("");
+  const riesgoA=A.data.filter(r=>r.estado==="rojo").sort((x,y)=>x.promedio-y.promedio).slice(0,5).map(r=>`${r.nombre} (${fmt(r.promedio)})`).join("<br>") || "Sin casos";
+  const riesgoB=B.data.filter(r=>r.estado==="rojo").sort((x,y)=>x.promedio-y.promedio).slice(0,5).map(r=>`${r.nombre} (${fmt(r.promedio)})`).join("<br>") || "Sin casos";
+  box.innerHTML=`
+    <div class="grid g3">
+      <div class="card kpi"><div class="label">${cursoA}</div><div class="val">${fmt(A.st.prom)}</div><div class="small">${A.st.n} estudiantes · Rojo ${A.st.rojo} · Amarillo ${A.st.amarillo} · Verde ${A.st.verde}</div></div>
+      <div class="card kpi"><div class="label">Diferencia A - B</div><div class="val">${dif(A.st.prom,B.st.prom)}</div><div class="small">Mediana: ${dif(A.st.med,B.st.med)} · Desv.: ${dif(A.st.std,B.st.std)}</div></div>
+      <div class="card kpi"><div class="label">${cursoB}</div><div class="val">${fmt(B.st.prom)}</div><div class="small">${B.st.n} estudiantes · Rojo ${B.st.rojo} · Amarillo ${B.st.amarillo} · Verde ${B.st.verde}</div></div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><h3>Distribución semáforo</h3>${barHTML(cursoA+" rojo",A.st.rojo,Math.max(A.st.n,1),"redbar")}${barHTML(cursoB+" rojo",B.st.rojo,Math.max(B.st.n,1),"redbar")}${barHTML(cursoA+" verde",A.st.verde,Math.max(A.st.n,1),"greenbar")}${barHTML(cursoB+" verde",B.st.verde,Math.max(B.st.n,1),"greenbar")}</div>
+      <div class="card"><h3>Estudiantes prioritarios</h3><div class="grid g2"><div><b>${cursoA}</b><br>${riesgoA}</div><div><b>${cursoB}</b><br>${riesgoB}</div></div></div>
+    </div>
+    <div class="tablebox" style="margin-top:16px;max-height:420px">
+      <table><thead><tr><th>Evaluación</th><th>${cursoA}</th><th>${cursoB}</th><th>Diferencia A-B</th><th>Mayor promedio</th></tr></thead><tbody>${evalTable || `<tr><td colspan="5">No hay evaluaciones comparables con la selección actual.</td></tr>`}</tbody></table>
+    </div>`;
+}
+
+function renderRanking(data){ const top=[...data].sort((a,b)=>b.promedio-a.promedio).slice(0,5).map(r=>`<div class="note"><span>${r.nombre}<br><span class="small">${r.curso}</span></span><b>${fmt(r.promedio)}</b></div>`).join(""); const mejora=data.filter(r=>r.tendencia==="Mejora").slice(0,5).map(r=>`<div class="note"><span>${r.nombre}</span><b>${fmt(r.promedio)}</b></div>`).join("")||"<p class='small'>Sin mejoras claras.</p>"; $("rankingBox").innerHTML=`<h3>Más altos</h3>${top||"<p class='small'>Sin datos.</p>"}<h3>Con mejora</h3>${mejora}`; }
+function renderAlerts(data,eRows,st){ const riesgo=data.filter(r=>r.estado==="rojo").sort((a,b)=>a.promedio-b.promedio).slice(0,10); const baja=data.filter(r=>r.tendencia==="Baja").sort((a,b)=>a.promedio-b.promedio).slice(0,10); const evalCrit=eRows.filter(e=>e.p<45).sort((a,b)=>a.p-b.p); $("alertasBox").innerHTML=`<div class="alertItem alertRed"><b>Estudiantes en rojo:</b> ${riesgo.length}<br>${riesgo.map(r=>`${r.nombre} (${fmt(r.promedio)})`).join("<br>")||"Sin casos."}</div><div class="alertItem alertYellow"><b>Con tendencia a la baja:</b> ${baja.length}<br>${baja.map(r=>`${r.nombre} (${fmt(r.promedio)})`).join("<br>")||"Sin casos."}</div><div class="alertItem alertRed"><b>Evaluaciones críticas bajo 4,5:</b><br>${evalCrit.map(e=>`${e.e} (${e.curso}): ${fmt(e.p)} · ${e.meta.fecha||"sin fecha"}<br><span class="small">Temario: ${e.meta.temario||"sin temario"}</span>`).join("<br><br>")||"Sin evaluaciones críticas."}</div>`; let lectura=[]; if(st.std!==null&&st.std>10) lectura.push("El curso presenta alta dispersión: conviene diferenciar apoyos."); if(st.rojo>0) lectura.push("Hay estudiantes en rojo que requieren seguimiento prioritario."); if(eRows[0]) lectura.push(`La evaluación más descendida es ${eRows[0].e} (${eRows[0].curso}) con promedio ${fmt(eRows[0].p)}. Temario: ${eRows[0].meta.temario || "sin temario detectado"}.`); if(st.verde>st.rojo+st.amarillo) lectura.push("La mayoría del grupo está en nivel verde."); $("lecturaBox").innerHTML=(lectura.map(x=>`<div class="ok">${x}</div>`).join("")||"<p class='small'>Sin lectura disponible.</p>"); }
+function colorFor(v){ if(v<45) return "#fecaca"; if(v<=55) return "#fde68a"; return "#bbf7d0"; }
+function renderHeat(data){ const evals=getEvalNames().filter(e=>selectedEvaluations.has(e)); const rows=data.slice().sort((a,b)=>a.curso.localeCompare(b.curso)||a.nombre.localeCompare(b.nombre)).slice(0,90); $("heatBox").innerHTML=rows.length?`<table><thead><tr><th>Estudiante</th>${evals.map(e=>`<th title="${e}">${e}</th>`).join("")}<th>Prom.</th></tr></thead><tbody>${rows.map(r=>`<tr><td style="text-align:left"><b>${r.nombre}</b><br><span class="small">${r.curso}</span></td>${evals.map(e=>{const v=r.compsUsados[e];return `<td class="hcell" style="background:${v===undefined?"#f8fafc":colorFor(v)}">${v===undefined?"—":fmt(v)}</td>`}).join("")}<td><b>${fmt(r.promedio)}</b></td></tr>`).join("")}</tbody></table>`:"<p class='small'>Carga un archivo para visualizar.</p>"; }
+function spark(vals){ if(vals.length<2) return ""; const w=120,h=32,minv=20,maxv=70,pts=vals.map((v,i)=>`${i*(w/(vals.length-1))},${h-((v-minv)/(maxv-minv))*h}`).join(" "); return `<svg class="spark" viewBox="0 0 ${w} ${h}"><polyline fill="none" stroke="#2563eb" stroke-width="3" points="${pts}"/></svg>`; }
+function renderTable(data){ $("tbody").innerHTML=data.sort((a,b)=>a.curso.localeCompare(b.curso)||a.promedio-b.promedio).map(r=>{ const vals=Object.values(r.compsUsados); return `<tr data-id="${r.id}" class="${selectedId===r.id?'selected':''}"><td>${r.curso}</td><td>${r.nombre}</td><td><b>${fmt(r.promedio)}</b></td><td>${pill(r.estado)}</td><td>${r.tendencia}<br>${spark(vals)}</td><td>${Object.entries(r.compsUsados).map(([k,v])=>`${k}: ${fmt(v)}`).join(" · ")}</td></tr>`; }).join(""); document.querySelectorAll("tr[data-id]").forEach(tr=>tr.onclick=()=>{selectedId=tr.dataset.id;renderFicha(computedRecords().find(r=>r.id===selectedId));render();}); }
+function renderFicha(r){ if(!r){$("ficha").innerHTML="Selecciona un estudiante para ver su perfil.";return;} const cursoData=computedRecords().filter(x=>x.curso===r.curso).sort((a,b)=>b.promedio-a.promedio); const pos=cursoData.findIndex(x=>x.id===r.id)+1; const promCurso=avg(cursoData.map(x=>x.promedio)); $("ficha").innerHTML=`<p class="small">${r.curso} · ${r.tipo}</p><h3 style="margin:4px 0 12px;font-size:22px">${r.nombre}</h3><div style="background:#f1f5f9;border-radius:18px;padding:18px;text-align:center;margin-bottom:12px"><div class="small">Promedio recalculado</div><div style="font-size:42px;font-weight:900">${fmt(r.promedio)}</div>${pill(r.estado)}</div><div class="note"><span>Posición en curso</span><b>${pos} de ${cursoData.length}</b></div><div class="note"><span>Diferencia vs. curso</span><b>${fmt(r.promedio-promCurso)}</b></div><div class="note"><span>Tendencia</span><b>${r.tendencia}</b></div><h3>Evaluaciones</h3>${Object.entries(r.compsUsados).map(([k,v])=>{const m=metaFor(r.curso,k);return `<div class="note"><span>${k}<br><span class="small">${m.fecha||"Sin fecha"} · ${m.temario||"Sin temario"}</span></span><b>${fmt(v)}</b></div>`}).join("")}`; }
+function makeReport(){ const tipo=$("tipoInforme").value, all=computedRecords(), data=filteredRecords(), evals=[...selectedEvaluations].join(", ")||"ninguna"; let txt=""; if(tipo==="estudiante"){ const r=all.find(x=>x.id===selectedId); if(!r){txt="No hay estudiante seleccionado.";} else{ const cursoData=all.filter(x=>x.curso===r.curso), st=stats(cursoData), pos=[...cursoData].sort((a,b)=>b.promedio-a.promedio).findIndex(x=>x.id===r.id)+1; txt=`INFORME ESTADÍSTICO DE ESTUDIANTE\nEstudiante: ${r.nombre}\nCurso: ${r.curso}\nPromedio recalculado: ${fmt(r.promedio)}\nSemáforo: ${r.estado.toUpperCase()}\nTendencia: ${r.tendencia}\nPosición aproximada: ${pos} de ${cursoData.length}\nPromedio del curso: ${fmt(st.prom)}\n\nEvaluaciones consideradas:\n${Object.entries(r.compsUsados).map(([k,v])=>{const m=metaFor(r.curso,k);return `- ${k}: ${fmt(v)} | Fecha: ${m.fecha||"sin fecha"} | Temario: ${m.temario||"sin temario"}`}).join("\n")}\n`; } } else if(tipo==="evaluacion"){ const key=$("evalSelect").value || selectedEvalKey; if(!key){txt="No hay evaluación seleccionada.";} else{ const [curso,e]=key.split("||"); const base=all.filter(r=>r.curso===curso && r.compsUsados[e]!==undefined); const vals=base.map(r=>r.compsUsados[e]); const meta=metaFor(curso,e); txt=`INFORME ESTADÍSTICO DE EVALUACIÓN\nCurso: ${curso}\nEvaluación: ${e}\nTipo: ${meta.tipo}\nFecha: ${meta.fecha||"sin fecha"}\nTemario: ${meta.temario||"sin temario"}\n\nResumen:\n- Estudiantes con dato: ${base.length}\n- Promedio: ${fmt(avg(vals))}\n- Mediana: ${fmt(median(vals))}\n- Desviación estándar: ${fmt(std(vals))}\n- Nota mínima: ${fmt(min(vals))}\n- Nota máxima: ${fmt(max(vals))}\n- Rojo: ${vals.filter(v=>v<45).length}\n- Amarillo: ${vals.filter(v=>v>=45&&v<=55).length}\n- Verde: ${vals.filter(v=>v>55).length}\n\nEstudiantes descendidos:\n${base.filter(r=>r.compsUsados[e]<45).sort((a,b)=>a.compsUsados[e]-b.compsUsados[e]).map(r=>`- ${r.nombre}: ${fmt(r.compsUsados[e])}`).join("\n")||"- No hay estudiantes bajo 4,5."}\n`; } } else { const base=tipo==="global"?all:data, st=stats(base); const eRows=evalRows(base).sort((a,b)=>a.p-b.p); txt=`INFORME ESTADÍSTICO ${tipo==="global"?"GLOBAL":"DE CURSO"}\nCurso/filtro: ${tipo==="global"?"Todos los cursos":$("curso").value}\nEvaluaciones consideradas: ${evals}\n\nResumen:\n- Estudiantes: ${st.n}\n- Promedio: ${fmt(st.prom)}\n- Mediana: ${fmt(st.med)}\n- Desviación estándar: ${fmt(st.std)}\n- Rango: ${fmt(st.min)} a ${fmt(st.max)}\n- Rojo: ${st.rojo}\n- Amarillo: ${st.amarillo}\n- Verde: ${st.verde}\n- Bajo 4,0: ${st.bajo40}\n- Promedio 6,0 o superior: ${st.sobre60}\n\nPromedio por evaluación, fecha y temario:\n${eRows.map(e=>`- ${e.e} (${e.curso}): ${fmt(e.p)} (${e.n} datos) | Fecha: ${e.meta.fecha||"sin fecha"} | Temario: ${e.meta.temario||"sin temario"}`).join("\n")||"- Sin datos"}\n\nEvaluaciones más descendidas:\n${eRows.slice(0,5).map(e=>`- ${e.e} (${e.curso}): ${fmt(e.p)} | Temario: ${e.meta.temario||"sin temario"}`).join("\n")||"- Sin datos"}\n\nEstudiantes en riesgo:\n${base.filter(r=>r.estado==="rojo").sort((a,b)=>a.promedio-b.promedio).map(r=>`- ${r.nombre} (${r.curso}): ${fmt(r.promedio)}`).join("\n")||"- No hay estudiantes en rojo."}\n\nEstudiantes con tendencia a la baja:\n${base.filter(r=>r.tendencia==="Baja").map(r=>`- ${r.nombre} (${r.curso}): ${fmt(r.promedio)}`).join("\n")||"- No hay tendencia a la baja clara."}\n`; } $("informe").value=txt; $("promptIA").value=`Actúa como profesor jefe/profesor de asignatura y redacta un informe pedagógico claro, profesional y útil a partir de las estadísticas que te entregaré.\n\nInstrucciones:\n1. No inventes estudiantes, notas, fechas ni temarios que no estén en el informe.\n2. Usa tono objetivo, docente y cuidadoso.\n3. Organiza en párrafos breves.\n4. Incluye panorama general, fortalezas, aspectos descendidos, evaluaciones o contenidos que requieren refuerzo, estudiantes que requieren seguimiento y sugerencias de acción pedagógica.\n5. Evita etiquetar negativamente a los estudiantes.\n6. Si es informe individual, redacta ficha con fortalezas, alertas y recomendaciones.\n7. Si es informe de evaluación, interpreta la fecha, el temario, la distribución de resultados y posibles decisiones pedagógicas.\n8. Si faltan datos, indícalo.\n\nINFORME ESTADÍSTICO:\n${txt}`; }
+async function copyText(id){const txt=$(id).value;if(!txt)return;await navigator.clipboard.writeText(txt);alert("Copiado al portapapeles.");}
+$("file").addEventListener("change",async e=>{ const file=e.target.files[0]; if(!file) return; const buffer=await file.arrayBuffer(); const wb=XLSX.read(buffer,{type:"array",cellDates:true}); rawRecords=parseWorkbook(wb); selectedId=null; selectedEvaluations=new Set(getEvalNames()); $("curso").innerHTML=["Todos",...new Set(rawRecords.map(r=>r.curso))].map(c=>`<option value="${c}">${c}</option>`).join(""); updateCompareSelectors(); renderChecks(); renderFicha(null); render(); });
+$("curso").addEventListener("change",render);$("buscar").addEventListener("input",render);$("evalSelect").addEventListener("change",()=>{selectedEvalKey=$("evalSelect").value;renderEvalFicha();});
+$("btnAll").onclick=()=>{selectedEvaluations=new Set(getEvalNames());renderChecks();render();};$("btnNone").onclick=()=>{selectedEvaluations=new Set();renderChecks();render();};$("btnPruebas").onclick=()=>{selectedEvaluations=new Set(getEvalNames().filter(e=>/^P\d/.test(e)));renderChecks();render();};$("btnSinTds").onclick=()=>{selectedEvaluations=new Set(getEvalNames().filter(e=>!evalType(e).includes("Ticket")));renderChecks();render();};
+$("btnInforme").onclick=makeReport;$("btnCopyInforme").onclick=()=>copyText("informe");$("btnCopyPrompt").onclick=()=>copyText("promptIA");
+["compCursoA","compCursoB","compEval"].forEach(id=>{ if($(id)) $(id).addEventListener("change",renderComparacion); });
+updateCompareSelectors();renderChecks();render();
+</script>
+</body>
+</html>
